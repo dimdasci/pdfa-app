@@ -1,0 +1,46 @@
+---
+description: Planning application architecture
+globs: 
+alwaysApply: false
+---
+# Application Architecture
+
+This React application follows a layered architecture approach as part of the dimosaic.dev ecosystem:
+
+## Environment Context
+
+- Application URL: pdfa.dimosaic.dev (subdomain of dimosaic.dev)
+- Authentication: Managed at dimosaic.dev level (JWT token in localStorage)
+- API Backend: Temporary URL - https://r1rkn5gtx2.execute-api.eu-central-1.amazonaws.com/prod
+
+## Frontend Architecture
+
+1. **UI Layer** - React components that render the interface
+   - Components should be organized by feature
+   - Use shadcn UI for consistent design
+
+2. **Application Layer** - Business logic and state management
+   - Use React Context for global state
+   - Keep business logic separate from UI components
+   - Handle API communication in dedicated service files
+
+3. **Service Layer** - Communication with backend services
+   - All API calls should be centralized in service modules
+   - Use JWT token from localStorage for authentication
+   - Redirect to dimosaic.dev when token is missing or invalid
+
+## Data Flow
+
+- Follow unidirectional data flow principles
+- Props down, events up
+- Use Context for cross-cutting concerns
+- Authentication state is derived from localStorage
+
+## Feature Implementation
+
+Follow the incremental implementation plan from [plan.md](mdc:docs/plan.md):
+1. Document Management Foundation
+2. Basic Viewing Capabilities
+3. Layer Extraction Implementation
+4. Advanced Layer Features
+5. Detection Features

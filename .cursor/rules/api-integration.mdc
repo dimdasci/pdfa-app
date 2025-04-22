@@ -1,0 +1,125 @@
+---
+description: Backend API calls
+globs: 
+alwaysApply: false
+---
+# API Integration Guidelines
+
+Based on the Swagger specification in [api.yaml](mdc:docs/api.yaml), follow these guidelines for API integration:
+
+## API Base URL
+
+**Important:** Use the following temporary API URL:
+```
+https://r1rkn5gtx2.execute-api.eu-central-1.amazonaws.com/prod
+```
+
+Example API call:
+```bash
+# Get version
+curl --request GET \
+  --url https://r1rkn5gtx2.execute-api.eu-central-1.amazonaws.com/prod/version \
+  --header 'content-type: application/json'
+```
+
+## API Endpoints
+
+The application should interact with these key HTTP API endpoints:
+
+1. `POST /documents` - Upload PDF, return `{document_id, status}`
+2. `GET /documents` - List PDFs (optional `status` filter)
+3. `GET /documents/{docId}` - Get document manifest with page count, sizes, status
+4. `GET /documents/{docId}/pages/{page}` - Get page bundle with raster URL, layer URLs, and object metadata
+5. `GET /version` - Get the API version (mainly for informational purposes)
+
+## API Authentication
+
+All API calls (except `/version`) must include the JWT token from localStorage:
+
+```js
+// Base API configuration with authentication
+const api = {
+  // Use the temporary API URL
+  baseUrl: 'https://r1rkn5gtx2.execute-api.eu-central-1.amazonaws.com/prod',
+  
+  async fetch(endpoint, options = {}) {
+    const token = localStorage.getItem('authToken')
+    
+    if (!token) {
+      // Redirect to main site if no token is present
+      window.location.href = 'https://dimosaic.dev'
+      return
+    }
+    
+    const response = await fetch(`${this.baseUrl}${endpoint}`, {
+      ...options,
+      headers: {
+        ...options.headers,
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    })
+    
+    if (response.status === 401 || response.status === 403) {
+      // Token expired or invalid
+      window.location.href = 'https://dimosaic.dev'
+      return
+    }
+    
+    return response
+  }
+}
+```
+
+## API Service Structure
+
+```
+src/services/
+├── api.js         # Base API configuration with auth
+├── documents.js   # Document-related API methods
+└── types.js       # TypeScript types for API responses
+```
+
+## API Integration Principles
+
+1. **Centralized Configuration**
+   - Base URL configuration in one place
+   - Authentication headers managed centrally
+   - JWT token retrieved from localStorage using key `authToken`
+
+2. **Error Handling**
+   - Consistent error handling for all API calls
+   - Clear error messages for users
+   - Redirect to dimosaic.dev root on authentication errors (401/403)
+
+3. **Data Transformation**
+   - Transform API responses to application-specific formats
+   - Keep raw API shapes separate from UI component props
+
+4. **Caching Strategy**
+   - Cache page bundles in memory
+   - Refresh on 403 errors (expired pre-signed URLs)
+   - Implement client-side pagination for document lists
+
+## API Response Types
+
+Based on the Swagger specification, the application should handle these response types:
+
+1. **UploadResponse**
+   ```typescript
+   interface UploadResponse {
+     document_id: string;
+     status: 'processing' | 'completed' | 'failed';
+   }
+   ```
+
+2. **DocumentListItem**
+   ```typescript
+   interface DocumentListItem {
+     document_id: string;
+     name: string;
+     status: 'processing' | 'completed' | 'failed';
+     page_count: number;
+     uploaded: string; // ISO date-time format
+   }
+   ```

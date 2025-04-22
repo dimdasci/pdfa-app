@@ -1,0 +1,109 @@
+---
+description: Working on React components
+globs: 
+alwaysApply: false
+---
+# Component Templates
+
+Use these templates to maintain consistency across the React application:
+
+## Basic Component Template
+
+```jsx
+// Component template for simple UI components
+import { useState } from 'react'
+import { cn } from '@/lib/utils'
+
+export function ComponentName({ className, ...props }) {
+  // Local state if needed
+  const [state, setState] = useState(initialState)
+  
+  // Event handlers
+  const handleEvent = () => {
+    // Implementation
+  }
+  
+  return (
+    <div className={cn("base-styles", className)} {...props}>
+      {/* Component content */}
+    </div>
+  )
+}
+```
+
+## Page Component Template
+
+```jsx
+// Template for page-level components
+import { useEffect, useState } from 'react'
+import { useParams } from 'react-router-dom'
+import { PageLayout } from '@/components/layout/PageLayout'
+import { ErrorBoundary } from '@/components/common/ErrorBoundary'
+import { documentService } from '@/services/documents'
+
+export function PageName() {
+  const { id } = useParams()
+  const [data, setData] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        setLoading(true)
+        const result = await documentService.getSomeData(id)
+        setData(result)
+      } catch (err) {
+        setError(err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    
+    fetchData()
+  }, [id])
+  
+  return (
+    <PageLayout>
+      <ErrorBoundary fallback={<ErrorDisplay error={error} />}>
+        {loading ? (
+          <LoadingIndicator />
+        ) : (
+          <MainContent data={data} />
+        )}
+      </ErrorBoundary>
+    </PageLayout>
+  )
+}
+```
+
+## Custom Hook Template
+
+```jsx
+// Template for custom hooks
+import { useState, useEffect, useCallback } from 'react'
+
+export function useCustomHook(params) {
+  // State declarations
+  const [state, setState] = useState(initialState)
+  
+  // Memoized functions
+  const handleSomething = useCallback(() => {
+    // Implementation
+  }, [/* dependencies */])
+  
+  // Side effects
+  useEffect(() => {
+    // Setup code
+    
+    return () => {
+      // Cleanup code
+    }
+  }, [/* dependencies */])
+  
+  return {
+    state,
+    handleSomething
+  }
+}
+```

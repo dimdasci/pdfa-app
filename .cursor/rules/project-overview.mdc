@@ -1,0 +1,23 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# PDF Structure Analysis Tool Overview
+
+The PDF Structure Analysis Tool is an MVP React web application that gives engineers visual insight into PDF internals to debug extraction errors. The main features include:
+
+- Layer slicer & outliner for different PDF element types (text/path/image/etc.)
+- Interactive layer toggles in the browser
+- Object-level metadata export
+- Client-side anomaly detection (zero-area, repeated patterns)
+
+## Project Context
+
+This project is part of a larger ecosystem of applications under dimosaic.dev. It specifically lives at the subdomain pdfa.dimosaic.dev. The authentication is centrally managed at the dimosaic.dev level, with this application consuming the shared authentication.
+
+## Key Files and Entry Points
+
+- [vite.config.js](mdc:vite.config.js) - Vite configuration
+- [main.jsx](mdc:src/main.jsx) - Application entry point
+- [App.jsx](mdc:src/App.jsx) - Root component

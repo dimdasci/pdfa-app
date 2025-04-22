@@ -1,0 +1,90 @@
+---
+description: Working on application structure and routes
+globs: 
+alwaysApply: false
+---
+# Routing & Authentication Guards
+
+## Routing Structure
+
+The application should implement protected routes with authentication guards:
+
+```jsx
+// Example route structure with auth protection
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { AuthGuard } from './components/auth/AuthGuard'
+import Dashboard from './pages/Dashboard'
+import DocumentView from './pages/DocumentView'
+import NotFound from './pages/NotFound'
+
+export function AppRouter() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route 
+          path="/" 
+          element={
+            <AuthGuard>
+              <Dashboard />
+            </AuthGuard>
+          } 
+        />
+        <Route 
+          path="/documents/:documentId" 
+          element={
+            <AuthGuard>
+              <DocumentView />
+            </AuthGuard>
+          } 
+        />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </BrowserRouter>
+  )
+}
+```
+
+## Authentication Guard
+
+Implement a reusable AuthGuard component to protect routes:
+
+```jsx
+// src/components/auth/AuthGuard.jsx
+import { useEffect, useState } from 'react'
+
+export function AuthGuard({ children }) {
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [isChecking, setIsChecking] = useState(true)
+  
+  useEffect(() => {
+    // Check for JWT token
+    const token = localStorage.getItem('authToken')
+    
+    if (!token) {
+      // No token, redirect to main site
+      window.location.href = 'https://dimosaic.dev'
+      return
+    }
+    
+    // Token exists, allow rendering children
+    setIsAuthenticated(true)
+    setIsChecking(false)
+  }, [])
+  
+  // Show nothing while checking auth state
+  if (isChecking) {
+    return <div>Loading...</div>
+  }
+  
+  // Render children only if authenticated
+  return isAuthenticated ? children : null
+}
+```
+
+## Initialization Flow
+
+1. On application load, check for the presence of `authToken` in localStorage
+2. If token is missing, redirect to dimosaic.dev main site
+3. If token is present, proceed with rendering the application
+4. For all API requests, include the token in Authorization header
+5. If any API request returns 401/403, redirect to main site (token expired)

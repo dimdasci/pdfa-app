@@ -1,0 +1,77 @@
+---
+description: Call API restrict access to the application for authorized users only
+globs: 
+alwaysApply: false
+---
+# Authentication Guidelines
+
+As part of the dimosaic.dev ecosystem, this application follows a specific authentication pattern:
+
+## Authentication Flow
+
+1. **Authentication Source**
+   - Authentication is managed at the dimosaic.dev level (parent application)
+   - JWT tokens are stored in localStorage under the key `authToken`
+   - This application does not handle login/registration directly
+
+2. **Authentication Check**
+   - On application initialization, check for the presence of the JWT token
+   - If token is not present, redirect user to the root dimosaic.dev page
+   - If token is present, proceed with the application flow
+
+3. **Token Usage**
+   - Use the JWT token from localStorage to authorize all API calls
+   - Include the token in the Authorization header as `Bearer <token>`
+   - Handle token expiration by redirecting to root when API returns 401/403
+
+## Implementation Pattern
+
+```jsx
+// Example authentication check in a route guard component
+import { useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+
+export function AuthGuard({ children }) {
+  const navigate = useNavigate()
+  
+  useEffect(() => {
+    const token = localStorage.getItem('authToken')
+    if (!token) {
+      // Redirect to dimosaic.dev root
+      window.location.href = 'https://dimosaic.dev'
+    }
+  }, [navigate])
+  
+  return children
+}
+```
+
+## API Authentication
+
+```jsx
+// Example API call with authentication
+async function fetchWithAuth(url, options = {}) {
+  const token = localStorage.getItem('authToken')
+  
+  if (!token) {
+    window.location.href = 'https://dimosaic.dev'
+    return
+  }
+  
+  const response = await fetch(url, {
+    ...options,
+    headers: {
+      ...options.headers,
+      'Authorization': `Bearer ${token}`
+    }
+  })
+  
+  if (response.status === 401 || response.status === 403) {
+    // Token expired or invalid
+    window.location.href = 'https://dimosaic.dev'
+    return
+  }
+  
+  return response
+}
+```

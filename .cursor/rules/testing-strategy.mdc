@@ -1,0 +1,41 @@
+---
+description: Writing tests
+globs: 
+alwaysApply: false
+---
+# Testing Strategy
+
+For the MVP phase, maintain a pragmatic approach to testing that ensures reliability without slowing development:
+
+## Test Types
+
+1. **Unit Tests**
+   - Focus on testing complex business logic
+   - Test utility functions thoroughly
+   - Use Jest and React Testing Library
+
+2. **Component Tests**
+   - Test key UI components in isolation
+   - Verify component behavior, not implementation details
+   - Use React Testing Library's user-event for interaction testing
+
+3. **Integration Tests**
+   - Test critical user flows
+   - Focus on high-value features first
+   - Verify that components work together correctly
+
+## Testing Guidelines
+
+- Write tests for complex logic and critical paths
+- Skip tests for simple UI components in early stages
+- Prioritize test coverage for:
+  - PDF processing logic
+  - Layer manipulation functionality
+  - Error handling
+
+## Testing Balance
+
+As an MVP, follow the testing pyramid with emphasis on:
+- Many unit tests for core PDF processing logic
+- Moderate component tests for key interactive elements
+- Few integration tests covering critical flows

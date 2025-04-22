@@ -1,0 +1,69 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Code Style & Quality Guidelines
+
+As an MVP project, we need to maintain a balance between speed of development and code quality. Follow these guidelines:
+
+## React Component Structure
+
+- Keep components small and focused on a single responsibility
+- Use functional components with hooks, not class components
+- Organize components by feature, not by type
+- Extract reusable UI elements to separate components
+
+## State Management
+
+- Use React Context for global state ([LocaleContext.jsx](mdc:src/context/LocaleContext.jsx) as an example)
+- Use local component state for UI-specific state
+- Prefer hooks like useState and useReducer for local state
+- Avoid prop drilling by leveraging context when needed
+
+## Styling
+
+- Use Tailwind CSS for styling as specified in [tailwind.config.js](mdc:tailwind.config.js)
+- Use shadcn UI components for consistent UI elements
+- Follow utility-first CSS approach
+- Use clsx/cva for conditional class names
+
+## Internationalization
+
+- **Always use internationalization** for user-facing text
+- Use the `useLocale` hook to access the current locale and translations
+- Use the `<FormattedMessage>` component or `formatMessage` from `useIntl()` for translations
+- Store all text in locale JSON files (src/locales/*.json)
+- The user's locale is stored in localStorage under the key `locale`
+- Current supported locales are 'en' and 'es'
+
+```jsx
+// Example of using internationalization
+import { FormattedMessage } from 'react-intl';
+import { useIntl } from 'react-intl';
+
+function MyComponent() {
+  const intl = useIntl();
+  
+  // Method 1: Using FormattedMessage component
+  return (
+    <div>
+      <h1>
+        <FormattedMessage id="component.title" defaultMessage="Default Title" />
+      </h1>
+      
+      {/* Method 2: Using formatMessage function */}
+      <button>
+        {intl.formatMessage({ id: 'component.button', defaultMessage: 'Click Me' })}
+      </button>
+    </div>
+  );
+}
+```
+
+## Performance Considerations
+
+- Memoize expensive calculations with useMemo
+- Prevent unnecessary re-renders with useCallback for event handlers
+- Use virtualization for long lists
+- Lazy load components when appropriate

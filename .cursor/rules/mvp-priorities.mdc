@@ -1,0 +1,39 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# MVP Development Priorities
+
+Follow these priorities to ensure we deliver a valuable MVP that balances simplicity and quality:
+
+## Priority Features (Must Have)
+
+1. **Layer Slicer & Outliner** (M01)
+   - Extract and display text, path, and image layers
+   - Provide visual outlines for PDF objects
+   - Implement z-index based layer organization
+
+2. **Interactive Layer Controls** (M02)
+   - Toggle visibility of different object types
+   - Toggle outlines independently from content
+   - Display object statistics for each layer
+
+## Secondary Features (Should Have)
+
+1. **Zero-Area Object Detection** (S01)
+   - Client-side detection of objects with zero or near-zero dimensions
+   - Visual highlighting of problematic objects
+
+2. **Repeated Pattern Detection** (S02)
+   - Identify elements that repeat across pages (headers/footers)
+   - Provide categorization of repeated elements
+
+## Development Approach
+
+- **Start Small**: Begin with core document viewing capability
+- **Incremental Delivery**: Add features one by one following [plan.md](mdc:docs/plan.md)
+- **Regular Demos**: Demonstrate progress after completing each step
+- **Technical Focus**: Prioritize UI and processing quality over comprehensive feature set
+- **Simplicity**: Choose the simplest implementation that meets requirements
+- **User Validation**: Schedule user testing after key milestones

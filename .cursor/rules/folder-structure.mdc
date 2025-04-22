@@ -1,0 +1,43 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Folder Structure Guidelines
+
+Follow this organized structure for the React application:
+
+## Main Directory Structure
+
+```
+src/
+├── assets/         # Static assets (images, icons)
+├── components/     # UI components 
+│   ├── common/     # Reusable UI components
+│   ├── document/   # Document-related components
+│   ├── layer/      # Layer visualization components
+│   └── layout/     # Layout components
+├── context/        # React Context providers
+├── hooks/          # Custom React hooks
+├── lib/            # Utility functions and constants
+├── pages/          # Page components
+├── services/       # API services
+└── styles/         # Global styles
+```
+
+## Naming Conventions
+
+- Use PascalCase for component files and folders
+- Use camelCase for util functions, hooks, and contexts
+- Use kebab-case for asset files
+- Keep related files together
+
+## Import Conventions
+
+- Use relative imports for files in the same directory
+- Use absolute imports for cross-directory imports (configured in tsconfig.json/vite.config.js)
+- Group imports in this order:
+  1. External libraries
+  2. Internal absolute imports
+  3. Internal relative imports
+  4. CSS/asset imports

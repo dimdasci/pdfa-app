@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+  <!-- Petal shape - final brand design -->
+  <path d="M11 20 L11 7 C11 7 14 7 16 7 C20 7 22 9 22 12 C22 15 19 20 16 20 Z" 
+        fill="black"
+        transform="rotate(-12, 16, 4)"/>
+  
+  <!-- Perfect circle dot -->
+  <circle cx="15" cy="27" r="3" fill="black"/>
+</svg> 
