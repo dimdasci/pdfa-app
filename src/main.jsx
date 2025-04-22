@@ -4,6 +4,7 @@ import { IntlProvider } from 'react-intl'
 import './index.css'
 import App from './App.jsx'
 import { LocaleProvider, useLocale } from './context/LocaleContext.jsx'
+import { AuthProvider } from './context/AuthContext.jsx'
 
 // Intermediate component to access locale context for IntlProvider
 function AppWrapper() {
@@ -24,7 +25,9 @@ function AppWrapper() {
         }
         // console.error(err); // Log other errors
       }}>
-      <App />
+      <AuthProvider>
+        <App />
+      </AuthProvider>
     </IntlProvider>
   );
 }

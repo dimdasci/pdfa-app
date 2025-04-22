@@ -3,6 +3,12 @@
     "app.change_language": "Change Language",
     "app.version": "Version",
     "app.name": "PDF Analyser",
+    "app.dashboard": "Dashboard",
+    "app.document_view": "Document View",
+    "app.authenticated": "You are authenticated! This is a protected page.",
+    "app.document_placeholder": "Document viewing functionality will be implemented here.",
+    "app.documents": "Your Documents",
+    "app.back_to_dashboard": "← Back to Dashboard",
   
     "brand.name": "dimosaic"
 }

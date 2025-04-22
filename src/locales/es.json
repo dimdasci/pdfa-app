@@ -1,8 +1,14 @@
 {
     "app.greeting": "¡Hola!",
-    "app.change_language": "Cambiar idioma",
+    "app.change_language": "Cambiar Idioma",
     "app.version": "Versión",
     "app.name": "Analizador de PDF",
-
+    "app.dashboard": "Panel Principal",
+    "app.document_view": "Vista de Documento",
+    "app.authenticated": "¡Estás autenticado! Esta es una página protegida.",
+    "app.document_placeholder": "La funcionalidad de visualización de documentos se implementará aquí.",
+    "app.documents": "Tus Documentos",
+    "app.back_to_dashboard": "← Volver al Panel Principal",
+  
     "brand.name": "dimosaic"
 }
