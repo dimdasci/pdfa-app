@@ -1,67 +1,40 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { Link } from 'react-router-dom';
+import { useDocuments } from '../../hooks/useApi';
 
 const DashboardContainer = () => {
   const intl = useIntl();
-  
-  // Sample data - would come from API in real implementation
-  const documents = [
-    { 
-      id: 'doc1', 
-      name: 'Annual_Report_2024.pdf', 
-      dateUploaded: '2025-04-15', 
-      pages: 12, 
-      size: '2.4 MB',
-      status: 'completed' 
-    },
-    { 
-      id: 'doc2', 
-      name: 'Contract_Agreement.pdf', 
-      dateUploaded: '2025-04-17', 
-      pages: 5, 
-      size: '1.8 MB',
-      status: 'processing' 
-    },
-    { 
-      id: 'doc3', 
-      name: 'Financial_Statement.pdf', 
-      dateUploaded: '2025-04-14', 
-      pages: 8, 
-      size: '3.2 MB',
-      status: 'failed' 
-    },
-    { 
-      id: 'doc4', 
-      name: 'Business_Plan_2025.pdf', 
-      dateUploaded: '2025-04-10', 
-      pages: 24, 
-      size: '5.1 MB',
-      status: 'completed' 
-    },
-    { 
-      id: 'doc5', 
-      name: 'Technical_Specifications.pdf', 
-      dateUploaded: '2025-04-08', 
-      pages: 6, 
-      size: '1.2 MB',
-      status: 'completed' 
-    }
-  ];
   
   // State for search and filter
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   
+  // Fetch documents from API - without status filter
+  const { documents, loading, error, refetch } = useDocuments();
+  
   // Placeholder for upload modal state
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   
-  // Filter documents based on search term and status filter
-  const filteredDocuments = documents.filter(doc => {
+  // Filter documents based on search term and status
+  const filteredDocuments = documents ? documents.filter(doc => {
     const matchesSearch = doc.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || doc.status === statusFilter;
+    const matchesStatus = statusFilter === 'all' || doc.status.toLowerCase() === statusFilter.toLowerCase();
     return matchesSearch && matchesStatus;
-  });
+  }) : [];
+  
+  // Calculate file size in human-readable format
+  const getHumanFileSize = (pageCount, status) => {
+    // Only completed documents have page count
+    if (status.toLowerCase() !== 'complete' || pageCount === undefined) {
+      return 'N/A';
+    }
+    
+    // This is a placeholder since API doesn't return file size
+    // We're estimating based on page count (rough approximation)
+    const estimatedSize = pageCount * 0.2; // Assume 200KB per page on average
+    return estimatedSize > 1 ? `${estimatedSize.toFixed(1)} MB` : `${(estimatedSize * 1000).toFixed(0)} KB`;
+  };
 
   // Format date to local date string
   const formatDate = (dateString) => {
@@ -70,8 +43,8 @@ const DashboardContainer = () => {
   
   // Get appropriate status badge class
   const getStatusBadgeClass = (status) => {
-    switch (status) {
-      case 'completed':
+    switch (status.toLowerCase()) {
+      case 'complete':
         return 'bg-green-100 text-green-800';
       case 'processing':
         return 'bg-yellow-100 text-yellow-800';
@@ -116,8 +89,8 @@ const DashboardContainer = () => {
               <option value="all">
                 {intl.formatMessage({ id: 'dashboard.all_statuses', defaultMessage: 'All statuses' })}
               </option>
-              <option value="completed">
-                {intl.formatMessage({ id: 'dashboard.completed', defaultMessage: 'Completed' })}
+              <option value="complete">
+                {intl.formatMessage({ id: 'dashboard.complete', defaultMessage: 'Complete' })}
               </option>
               <option value="processing">
                 {intl.formatMessage({ id: 'dashboard.processing', defaultMessage: 'Processing' })}
@@ -152,9 +125,21 @@ const DashboardContainer = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {filteredDocuments.length > 0 ? (
+              {loading ? (
+                <tr>
+                  <td colSpan="5" className="px-4 md:px-6 py-4 text-center text-gray-500">
+                    <FormattedMessage id="dashboard.loading" defaultMessage="Loading documents..." />
+                  </td>
+                </tr>
+              ) : error ? (
+                <tr>
+                  <td colSpan="5" className="px-4 md:px-6 py-4 text-center text-red-500">
+                    <FormattedMessage id="dashboard.error" defaultMessage="Error loading documents" />
+                  </td>
+                </tr>
+              ) : filteredDocuments.length > 0 ? (
                 filteredDocuments.map((doc) => (
-                  <tr key={doc.id} className="hover:bg-gray-50">
+                  <tr key={doc.document_id} className="hover:bg-gray-50">
                     <td className="px-4 md:px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="h-8 w-8 md:h-10 md:w-10 bg-red-100 rounded flex items-center justify-center mr-3">
@@ -164,27 +149,27 @@ const DashboardContainer = () => {
                         </div>
                         <div>
                           <div className="font-medium text-sm md:text-base truncate max-w-[120px] md:max-w-xs">{doc.name}</div>
-                          <div className="text-xs md:text-sm text-gray-500">{doc.size}</div>
+                          <div className="text-xs md:text-sm text-gray-500">{getHumanFileSize(doc.page_count, doc.status)}</div>
                           {/* Show date on mobile inline, hidden on desktop where it has its own column */}
-                          <div className="text-xs text-gray-500 md:hidden">{formatDate(doc.dateUploaded)}</div>
+                          <div className="text-xs text-gray-500 md:hidden">{formatDate(doc.uploaded)}</div>
                         </div>
                       </div>
                     </td>
                     <td className="hidden md:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {formatDate(doc.dateUploaded)}
+                      {formatDate(doc.uploaded)}
                     </td>
                     <td className="hidden md:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {doc.pages}
+                      {doc.status.toLowerCase() === 'complete' ? doc.page_count : 'N/A'}
                     </td>
                     <td className="px-4 md:px-6 py-4 whitespace-nowrap">
                       <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadgeClass(doc.status)}`}>
-                        {intl.formatMessage({ id: `dashboard.${doc.status}`, defaultMessage: doc.status })}
+                        {intl.formatMessage({ id: `dashboard.${doc.status.toLowerCase()}`, defaultMessage: doc.status })}
                       </span>
                     </td>
                     <td className="px-4 md:px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      {doc.status === 'completed' && (
+                      {doc.status.toLowerCase() === 'complete' && (
                         <>
-                          <Link to={`/documents/${doc.id}/analysis`} className="text-blue-600 hover:text-blue-900 mr-3">
+                          <Link to={`/documents/${doc.document_id}/analysis`} className="text-blue-600 hover:text-blue-900 mr-3">
                             <FormattedMessage id="dashboard.analyze" defaultMessage="Analyze" />
                           </Link>
                           <button className="text-gray-600 hover:text-gray-900">
@@ -192,17 +177,17 @@ const DashboardContainer = () => {
                           </button>
                         </>
                       )}
-                      {(doc.status === 'processing' || doc.status === 'failed') && (
+                      {(doc.status.toLowerCase() === 'processing' || doc.status.toLowerCase() === 'failed') && (
                         <>
-                          <Link to={`/documents/${doc.id}/processing`} className="text-blue-600 hover:text-blue-900 mr-3">
+                          <Link to={`/documents/${doc.document_id}/processing`} className="text-blue-600 hover:text-blue-900 mr-3">
                             <FormattedMessage id="dashboard.view" defaultMessage="View" />
                           </Link>
-                          {doc.status === 'processing' && (
+                          {doc.status.toLowerCase() === 'processing' && (
                             <button className="text-gray-600 hover:text-gray-900">
                               <FormattedMessage id="dashboard.cancel" defaultMessage="Cancel" />
                             </button>
                           )}
-                          {doc.status === 'failed' && (
+                          {doc.status.toLowerCase() === 'failed' && (
                             <button className="text-yellow-600 hover:text-yellow-900">
                               <FormattedMessage id="dashboard.retry" defaultMessage="Retry" />
                             </button>
@@ -266,7 +251,7 @@ const DashboardContainer = () => {
         </div>
         
         {/* Empty State (Hidden if there are documents) */}
-        {documents.length === 0 && (
+        {!loading && !error && documents && documents.length === 0 && (
           <div className="bg-white rounded-lg shadow p-12 text-center">
             <div className="h-20 w-20 mx-auto bg-gray-200 rounded-full mb-4 flex items-center justify-center">
               <svg className="h-10 w-10 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
