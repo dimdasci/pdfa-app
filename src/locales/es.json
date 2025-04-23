@@ -14,7 +14,7 @@
     "dashboard.your_documents": "Tus Documentos",
     "dashboard.search_documents": "Buscar documentos...",
     "dashboard.all_statuses": "Todos los estados",
-    "dashboard.completed": "Completado",
+    "dashboard.complete": "Completado",
     "dashboard.processing": "Procesando",
     "dashboard.failed": "Fallido",
     "dashboard.document_name": "Nombre del Documento",
