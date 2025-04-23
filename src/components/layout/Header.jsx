@@ -16,8 +16,8 @@ const Header = () => {
   };
   
   return (
-    <header className="bg-white shadow p-4">
-      <div className="flex justify-between items-center">
+    <header className="bg-white shadow">
+      <div className="p-4 md:p-6 py-4 flex justify-between items-center">
         <div className="flex items-center">
           {!isDashboard && (
             <button 
