@@ -5,8 +5,11 @@
     "app.back_to_dashboard": "← Back to Documents",
     "app.title": "PDF Structure Analysis Tool",
     "app.upload_pdf": "Upload PDF",
-    "app.footer": "PDF Structure Analysis Tool - Beta Version",
+    "app.footer": "PDF Structure Analysis Tool - {version}",
     "app.mobile_notice": "The app is designed for desktop. Limited functionality is available on mobile.",
+    "app.desktop_only": "Desktop Only Feature",
+    "app.mobile_limited": "The app is designed for desktop. Limited functionality is available on mobile.",
+    "app.mobile_suggestion": "Please use a desktop device to access the full PDF analysis features.",
   
     "dashboard.your_documents": "Your Documents",
     "dashboard.search_documents": "Search documents...",
@@ -37,6 +40,10 @@
     "dashboard.fetch": "Fetch",
     "dashboard.supported_formats": "Supported formats: PDF only",
     "dashboard.upload": "Upload",
+    "dashboard.uploading": "Uploading...",
+    "dashboard.upload_success": "Document uploaded successfully",
+    "dashboard.upload_error": "Failed to upload document",
+    "dashboard.loading_documents": "Loading documents...",
     
     "processing.document_info": "Uploaded on {date} • {pages} pages • {size}",
     "processing.processing_document": "Processing Document",
@@ -49,6 +56,7 @@
     "processing.error_reason_2": "Unsupported PDF structure",
     "processing.error_reason_3": "Password protection or encryption",
     "processing.retry": "Retry Processing",
+    "processing.loading_document": "Loading document details...",
     
     "analysis.document_info": "Document Info",
     "analysis.document_metadata": "{pages} pages • {size}",
@@ -80,6 +88,21 @@
     "analysis.total_area": "Total Area:",
     "analysis.coverage": "Coverage:",
     "analysis.area_distribution": "Area Distribution",
+    "analysis.loading_page": "Loading page {page}...",
+    "analysis.loading_document": "Loading document details...",
+  
+    "breadcrumb.home": "Home",
+    "breadcrumb.documents": "Documents",
+    "breadcrumb.processing": "Processing",
+    "breadcrumb.analysis": "Analysis",
+    "breadcrumb.upload": "Upload",
+    
+    "common.loading": "Loading...",
+    "common.error_occurred": "An error occurred",
+    "common.retry": "Retry",
+    "common.connection_error": "Connection error. Please check your internet connection.",
+    "common.server_error": "Server error. Please try again later.",
+    "common.auth_error": "Authentication error. Please log in again.",
   
     "brand.name": "dimosaic"
 }

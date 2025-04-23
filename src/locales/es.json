@@ -3,10 +3,13 @@
     "app.dashboard": "Tablero",
     "app.documents": "Tus Documentos",
     "app.back_to_dashboard": "← Volver a Documentos",
-    "app.title": "Herramienta de Análisis de Estructura PDF",
+    "app.title": "Análisis de PDF",
     "app.upload_pdf": "Subir PDF",
-    "app.footer": "Herramienta de Análisis de Estructura PDF - Versión Beta",
+    "app.footer": "Análisis de PDF - {version}",
     "app.mobile_notice": "La aplicación está diseñada para escritorio. Funcionalidad limitada disponible en móvil.",
+    "app.desktop_only": "Función Solo para Escritorio",
+    "app.mobile_limited": "La aplicación está diseñada para escritorio. Funcionalidad limitada disponible en móvil.",
+    "app.mobile_suggestion": "Por favor, utiliza un dispositivo de escritorio para acceder a todas las funciones de análisis de PDF.",
   
     "dashboard.your_documents": "Tus Documentos",
     "dashboard.search_documents": "Buscar documentos...",
@@ -37,6 +40,10 @@
     "dashboard.fetch": "Obtener",
     "dashboard.supported_formats": "Formatos admitidos: solo PDF",
     "dashboard.upload": "Subir",
+    "dashboard.uploading": "Subiendo...",
+    "dashboard.upload_success": "Documento subido exitosamente",
+    "dashboard.upload_error": "Error al subir el documento",
+    "dashboard.loading_documents": "Cargando documentos...",
     
     "processing.document_info": "Subido el {date} • {pages} páginas • {size}",
     "processing.processing_document": "Procesando Documento",
@@ -49,6 +56,7 @@
     "processing.error_reason_2": "Estructura de PDF no soportada",
     "processing.error_reason_3": "Protección con contraseña o encriptación",
     "processing.retry": "Reintentar Procesamiento",
+    "processing.loading_document": "Cargando detalles del documento...",
     
     "analysis.document_info": "Información del Documento",
     "analysis.document_metadata": "{pages} páginas • {size}",
@@ -80,6 +88,21 @@
     "analysis.total_area": "Área Total:",
     "analysis.coverage": "Cobertura:",
     "analysis.area_distribution": "Distribución de Área",
+    "analysis.loading_page": "Cargando página {page}...",
+    "analysis.loading_document": "Cargando detalles del documento...",
+  
+    "breadcrumb.home": "Inicio",
+    "breadcrumb.documents": "Documentos",
+    "breadcrumb.processing": "Procesando",
+    "breadcrumb.analysis": "Análisis",
+    "breadcrumb.upload": "Subir",
+    
+    "common.loading": "Cargando...",
+    "common.error_occurred": "Ha ocurrido un error",
+    "common.retry": "Reintentar",
+    "common.connection_error": "Error de conexión. Por favor, verifica tu conexión a internet.",
+    "common.server_error": "Error del servidor. Por favor, inténtalo de nuevo más tarde.",
+    "common.auth_error": "Error de autenticación. Por favor, inicia sesión de nuevo.",
   
     "brand.name": "dimosaic"
 }
