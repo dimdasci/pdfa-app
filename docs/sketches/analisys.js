@@ -14,7 +14,6 @@ const FinalAnalysisWireframe = () => {
           </div>
           <div className="flex items-center space-x-4">
             <button className="bg-blue-600 text-white px-4 py-2 rounded flex items-center">
-              <div className="h-4 w-4 bg-white rounded mr-2"></div>
               <span>Upload PDF</span>
             </button>
             <span className="text-gray-600">User Name</span>

@@ -1,92 +1,75 @@
-import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
-import { FormattedMessage, useIntl } from 'react-intl';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthGuard } from './components/auth/AuthGuard';
+import MainLayout from './components/layout/MainLayout';
+import DashboardContainer from './components/dashboard/DashboardContainer';
+import ProcessingContainer from './components/processing/ProcessingContainer';
+import AnalysisContainer from './components/analysis/AnalysisContainer';
 
-// Placeholder components - these would be in separate files in a real app
-function Dashboard() {
-  const intl = useIntl();
-  
-  // Mock document list
-  const documents = [
-    { id: '1', name: 'Example PDF 1' },
-    { id: '2', name: 'Example PDF 2' },
-    { id: '3', name: 'Example PDF 3' },
-  ];
-  
-  return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">
-        <FormattedMessage id="app.dashboard" defaultMessage="Dashboard" />
-      </h1>
-      <p className="mb-4">
-        <FormattedMessage 
-          id="app.authenticated" 
-          defaultMessage="You are authenticated! This is a protected page." 
-        />
-      </p>
-      
-      <div className="mt-6">
-        <h2 className="text-xl font-semibold mb-3">
-          <FormattedMessage id="app.documents" defaultMessage="Your Documents" />
-        </h2>
-        
-        <ul className="space-y-2">
-          {documents.map(doc => (
-            <li key={doc.id} className="border border-gray-200 p-3 rounded hover:bg-gray-50">
-              <Link to={`/documents/${doc.id}`} className="text-blue-600 hover:underline">
-                {doc.name}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </div>
+// Upload Modal component - will be implemented as a route
+const UploadModal = () => (
+  <div className="flex items-center justify-center h-full">
+    <div className="bg-white rounded-lg shadow p-8">
+      <p>Upload modal will be implemented here</p>
     </div>
-  );
-}
-
-function DocumentView() {
-  const intl = useIntl();
-  
-  return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">
-        <FormattedMessage id="app.document_view" defaultMessage="Document View" />
-      </h1>
-      <p className="mb-4">
-        <FormattedMessage 
-          id="app.document_placeholder" 
-          defaultMessage="Document viewing functionality will be implemented here." 
-        />
-      </p>
-      
-      <div className="mt-6">
-        <Link to="/" className="text-blue-600 hover:underline">
-          <FormattedMessage id="app.back_to_dashboard" defaultMessage="← Back to Dashboard" />
-        </Link>
-      </div>
-    </div>
-  );
-}
+  </div>
+);
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Dashboard route */}
         <Route 
           path="/" 
           element={
             <AuthGuard>
-              <Dashboard />
+              <MainLayout>
+                <DashboardContainer />
+              </MainLayout>
             </AuthGuard>
           } 
         />
+        
+        {/* Upload modal route */}
         <Route 
-          path="/documents/:documentId" 
+          path="/upload" 
           element={
             <AuthGuard>
-              <DocumentView />
+              <MainLayout>
+                <UploadModal />
+              </MainLayout>
             </AuthGuard>
           } 
+        />
+        
+        {/* Processing view route */}
+        <Route 
+          path="/documents/:documentId/processing" 
+          element={
+            <AuthGuard>
+              <MainLayout>
+                <ProcessingContainer />
+              </MainLayout>
+            </AuthGuard>
+          } 
+        />
+        
+        {/* Analysis view route */}
+        <Route 
+          path="/documents/:documentId/analysis" 
+          element={
+            <AuthGuard>
+              <MainLayout>
+                <AnalysisContainer />
+              </MainLayout>
+            </AuthGuard>
+          } 
+        />
+        
+        {/* Redirect /documents/:documentId to the analysis view */}
+        <Route 
+          path="/documents/:documentId" 
+          element={<Navigate to="/documents/:documentId/analysis" replace />} 
         />
       </Routes>
     </BrowserRouter>
