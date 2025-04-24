@@ -53,11 +53,14 @@ const Header = () => {
           </Link>
         </div>
         
-        <div className="flex items-center space-x-4">
-          {/* Removed Upload PDF link */}
-          
-          <span className="text-gray-600 hidden md:inline">User Name</span>
-          <div className="h-8 w-8 bg-gray-300 rounded-full"></div>
+        <div className="flex items-center">
+          {/* Logout Button */}
+          <button 
+            onClick={() => { console.log("Logout clicked"); /* TODO: Implement logout logic */ }}
+            className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          >
+            <FormattedMessage id="app.logout" defaultMessage="Logout" />
+          </button>
         </div>
       </div>
     </header>
