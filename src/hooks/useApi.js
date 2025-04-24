@@ -94,25 +94,58 @@ export function usePageBundle(docId, pageNumber) {
 }
 
 /**
- * Hook for uploading a document
- * @returns {Object} Object with upload, loading, error, and result functions
+ * Hook for uploading a document (file or URL)
+ * Manages loading, error, and progress state internally.
+ * @returns {Object} Object with upload function, loading, error, progress, and result states
  */
 export function useUploadDocument() {
   const [result, setResult] = useState(null);
-  const { 
-    loading, 
-    error, 
-    execute: upload 
-  } = useApi(api.uploadDocument, [], false);
-  
-  // Wrapper to capture the result
-  const uploadDocument = useCallback(async (file) => {
-    const result = await upload(file);
-    setResult(result);
-    return result;
-  }, [upload]);
-  
-  return { upload: uploadDocument, loading, error, result };
+  const [loading, setLoading] = useState(false); // Not immediate, starts on call
+  const [error, setError] = useState(null);
+  const [progress, setProgress] = useState(0); // Track upload progress
+
+  // Function to reset the hook's state
+  const resetUploadState = useCallback(() => {
+    setResult(null);
+    setLoading(false);
+    setError(null);
+    setProgress(0);
+  }, []); // No dependencies, setters are stable
+
+  // The function components will call to initiate the upload
+  const upload = useCallback(async ({ documentName, file, url }) => {
+    setLoading(true);
+    setError(null);
+    setProgress(0);
+    setResult(null);
+
+    // Define the progress handler to update state
+    const handleProgress = (percentComplete) => {
+      setProgress(percentComplete);
+    };
+
+    try {
+      // Call the updated service function, passing the progress handler
+      const uploadResult = await api.uploadDocument({ 
+        documentName, 
+        file, 
+        url, 
+        onProgress: handleProgress 
+      });
+      setResult(uploadResult);
+      setProgress(100); // Ensure progress hits 100 on success
+      return uploadResult; // Return result on success
+    } catch (err) {
+      setError(err.message || 'Upload failed');
+      setProgress(0); // Reset progress on error
+      return null; // Return null on error
+    } finally {
+      setLoading(false);
+    }
+  }, []); // No dependencies needed for useCallback as it uses state setters
+
+  // Return the reset function along with others
+  return { upload, loading, error, progress, result, resetUploadState };
 }
 
 /**

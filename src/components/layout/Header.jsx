@@ -54,17 +54,7 @@ const Header = () => {
         </div>
         
         <div className="flex items-center space-x-4">
-          <Link 
-            to="/upload" 
-            className="bg-blue-600 text-white px-4 py-2 rounded flex items-center"
-          >
-            <span className="hidden md:inline">
-              <FormattedMessage id="app.upload_pdf" defaultMessage="Upload PDF" />
-            </span>
-            <span className="md:hidden">
-              <FormattedMessage id="app.upload" defaultMessage="Upload" />
-            </span>
-          </Link>
+          {/* Removed Upload PDF link */}
           
           <span className="text-gray-600 hidden md:inline">User Name</span>
           <div className="h-8 w-8 bg-gray-300 rounded-full"></div>

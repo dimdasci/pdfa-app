@@ -31,16 +31,7 @@ function App() {
         />
         
         {/* Upload modal route */}
-        <Route 
-          path="/upload" 
-          element={
-            <AuthGuard>
-              <MainLayout>
-                <UploadModal />
-              </MainLayout>
-            </AuthGuard>
-          } 
-        />
+        {/* Removed upload route */}
         
         {/* Processing view route */}
         <Route 

@@ -73,26 +73,86 @@ const api = {
   },
   
   /**
-   * Upload a PDF document
-   * @param {File} file - The PDF file to upload
+   * Upload a PDF document via File or URL
+   * @param {Object} options - Upload options
+   * @param {string} options.documentName - The name for the document
+   * @param {File} [options.file] - The PDF file to upload (if file upload)
+   * @param {string} [options.url] - The URL of the PDF to upload (if URL upload)
+   * @param {Function} [options.onProgress] - Callback for upload progress updates (percentage 0-100)
    * @returns {Promise<Object>} Upload response with document ID and status
    */
-  async uploadDocument(file) {
-    const formData = new FormData();
-    formData.append('file', file);
-    
-    const token = localStorage.getItem('authToken');
-    
-    const response = await fetch(`${API_BASE_URL}/documents`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        // Content-Type is automatically set by the browser for FormData
-      },
-      body: formData
+  uploadDocument({ documentName, file, url, onProgress }) {
+    // Return a Promise to match the async/await pattern used elsewhere
+    return new Promise((resolve, reject) => {
+      const formData = new FormData();
+      formData.append('documentName', documentName);
+      
+      if (file) {
+        formData.append('file', file);
+      } else if (url) {
+        formData.append('url', url);
+      } else {
+        // Should not happen if validation is done in component, but good to check
+        return reject(new Error('Either file or url must be provided.'));
+      }
+      
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        // Handle missing token early, similar to handleResponse
+        window.location.href = 'https://dimosaic.dev'; 
+        return reject(new Error('Authentication required'));
+      }
+      
+      const xhr = new XMLHttpRequest();
+      
+      // Progress Listener
+      if (onProgress && xhr.upload) {
+        xhr.upload.onprogress = (event) => {
+          if (event.lengthComputable) {
+            const percentComplete = Math.round((event.loaded / event.total) * 100);
+            onProgress(percentComplete);
+          }
+        };
+      }
+      
+      // Error Handler
+      xhr.onerror = () => {
+         // Network errors
+        reject(new Error('Upload failed due to network error.'));
+      };
+
+      // Success Handler
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try {
+            const responseData = JSON.parse(xhr.responseText);
+            resolve(responseData); // Successfully uploaded and parsed response
+          } catch (e) {
+            reject(new Error('Failed to parse upload response.'));
+          }
+        } else {
+          // Handle API errors similar to handleResponse
+          if (xhr.status === 401) {
+            localStorage.removeItem('authToken');
+            window.location.href = 'https://dimosaic.dev';
+            reject(new Error('Authentication required'));
+          } else {
+            try {
+              const errorData = JSON.parse(xhr.responseText);
+              reject(new Error(errorData.message || `API error: ${xhr.status}`));
+            } catch (e) {
+              reject(new Error(`API error: ${xhr.status}`));
+            }
+          }
+        }
+      };
+
+      // Configure and Send Request
+      xhr.open('POST', `${API_BASE_URL}/documents`, true); 
+      xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+      // Note: Do NOT set Content-Type when sending FormData, browser handles it
+      xhr.send(formData);
     });
-    
-    return handleResponse(response);
   },
   
   /**

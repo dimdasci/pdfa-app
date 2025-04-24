@@ -68,6 +68,7 @@ const DashboardContainer = () => {
           statusFilter={statusFilter}
           onSearchChange={(e) => setSearchTerm(e.target.value)}
           onFilterChange={(e) => setStatusFilter(e.target.value)}
+          onUploadClick={() => setIsUploadModalOpen(true)}
         />
         
         {/* Use the new DocumentTable component */}
@@ -90,6 +91,7 @@ const DashboardContainer = () => {
       <UploadModal 
         isOpen={isUploadModalOpen}
         onClose={() => setIsUploadModalOpen(false)}
+        onUploadSuccess={refetch}
       />
     </div>
   );
