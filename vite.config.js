@@ -6,6 +6,7 @@ import autoprefixer from 'autoprefixer'
 
 // https://vite.dev/config/
 export default defineConfig({
+  base: '/pdfa/',
   plugins: [
     react(),
     tsconfigPaths()
@@ -21,7 +22,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://r1rkn5gtx2.execute-api.eu-central-1.amazonaws.com/prod',
+        target: 'https://pdfa.dimosaic.dev',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ''),
       },

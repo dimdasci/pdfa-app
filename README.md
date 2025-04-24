@@ -1,12 +1,21 @@
-# React + Vite
+# PDF Analyzer Application
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Deployment
 
-Currently, two official plugins are available:
+The application is deployed to AWS S3 and served via CloudFront.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+1.  **Build the project:**
+    ```bash
+    npm run build
+    ```
+    This creates an optimized production build in the `dist/` directory.
 
-## Expanding the ESLint configuration
+2.  **Deploy to Production:**
+    ```bash
+    npm run deploy:prod -- --profile <aws-profile>
+    ```
+    Replace `<aws-profile>` with the name of your configured AWS CLI profile. This script performs the following actions:
+    *   Syncs the `dist/` directory contents to the `s3://dimosaic.dev` S3 bucket.
+    *   Creates a CloudFront invalidation for distribution `ELIKG4D5XSD7R` to ensure the latest changes are served.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+

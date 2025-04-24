@@ -16,7 +16,7 @@ const UploadModal = () => (
 
 function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/pdfa">
       <Routes>
         {/* Dashboard route */}
         <Route 
