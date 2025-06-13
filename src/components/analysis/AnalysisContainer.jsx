@@ -10,7 +10,6 @@ import ErrorMessage from '../common/ErrorMessage';
 import DocumentInfo from './sidebar/DocumentInfo';
 import LayersPanel from './sidebar/LayersPanel';
 import AnomalyPanel from './sidebar/AnomalyPanel';
-import ObjectInspector from './sidebar/ObjectInspector';
 import ViewerToolbar from './viewer/ViewerToolbar';
 import PdfViewerContainer from './viewer/PdfViewerContainer';
 import MobileAnalysisNotice from './MobileAnalysisNotice';
@@ -74,16 +73,11 @@ const AnalysisContainer = () => {
   // Get zero-area objects from the page bundle
   const zeroAreaObjects = pageBundle?.zero_objects || [];
   
-  // Sample anomalies with real zero-area object count if available
+  // Sample anomalies with only zero-area objects count
   const anomalies = [
     { 
       type: 'zero-area', 
       count: zeroAreaObjects.length || 3 
-    },
-    { 
-      type: 'repeated-pattern', 
-      count: 1, 
-      description: 'Page header detected on 12 pages' 
     }
   ];
   
@@ -136,10 +130,8 @@ const AnalysisContainer = () => {
 
           {/* Desktop view - Show full analysis UI */}
           <div className="hidden md:flex h-full overflow-hidden">
-            {/* Left Sidebar - Document Info, Layers Panel, Anomaly Detection */}
+            {/* Left Sidebar - Layers Panel and Anomaly Detection */}
             <div className="w-72 bg-white shadow-md overflow-y-auto flex flex-col">
-              <DocumentInfo document={document} />
-              
               <LayersPanel 
                 layers={processedLayers}
                 layerVisibility={layerVisibility}
@@ -180,13 +172,10 @@ const AnalysisContainer = () => {
               />
             </div>
             
-            {/* Right Sidebar - Object Inspector */}
-            <ObjectInspector 
-              processedLayers={processedLayers}
-              pageBundle={pageBundle}
-              selectedObject={null} // Implement selected object state when needed
-              onClose={() => {}} // Implement close handler when needed
-            />
+            {/* Right Sidebar - Document Info */}
+            <div className="w-64 bg-white shadow-md overflow-y-auto border-l border-gray-200">
+              <DocumentInfo document={document} />
+            </div>
           </div>
         </>
       )}

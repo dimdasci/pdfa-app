@@ -1,5 +1,123 @@
 import React from 'react';
 import { FormattedMessage } from 'react-intl';
+import { getHumanFileSize, formatDate } from '../../../lib/formatters';
+
+/**
+ * Document information panel
+ */
+const DocumentInfoPanel = ({ document }) => {
+  if (!document) return null;
+  
+  return (
+    <div className="mb-4">
+      <h3 className="text-sm font-medium mb-2">
+        <FormattedMessage id="analysis.document_info" defaultMessage="Document Info" />
+      </h3>
+      <div className="bg-gray-50 rounded p-3 text-sm">
+        <div className="mb-1"><strong>{document.name}</strong></div>
+        <div className="text-xs text-gray-600 mb-1">
+          #{document.document_id}
+        </div>
+        <div className="text-xs text-gray-600">
+          <FormattedMessage 
+            id="analysis.document_metadata" 
+            defaultMessage="{pages} pages • {size}"
+            values={{ 
+              pages: document.page_count || 'N/A', 
+              size: getHumanFileSize(document.size_in_bytes)
+            }}
+          />
+        </div>
+        <div className="text-xs text-gray-600">
+          <FormattedMessage 
+            id="analysis.upload_date" 
+            defaultMessage="Uploaded: {date}"
+            values={{ date: formatDate(document.uploaded) }}
+          />
+        </div>
+        
+        {/* PDF Metadata collapsed section */}
+        {document.info?.meta && (
+          <div className="mt-2 text-xs">
+            <details>
+              <summary className="cursor-pointer text-blue-600 hover:text-blue-800">
+                <FormattedMessage id="analysis.document_meta" defaultMessage="PDF Metadata" />
+              </summary>
+              <div className="mt-1 pl-1 space-y-1">
+                {document.info.meta.Author && (
+                  <div>
+                    <span className="text-gray-500">
+                      <FormattedMessage id="analysis.author" defaultMessage="Author:" />
+                    </span> {document.info.meta.Author}
+                  </div>
+                )}
+                {document.info.meta.Producer && (
+                  <div>
+                    <span className="text-gray-500">
+                      <FormattedMessage id="analysis.producer" defaultMessage="Producer:" />
+                    </span> {document.info.meta.Producer}
+                  </div>
+                )}
+                {document.info.meta.Creator && (
+                  <div>
+                    <span className="text-gray-500">
+                      <FormattedMessage id="analysis.creator" defaultMessage="Creator:" />
+                    </span> {document.info.meta.Creator}
+                  </div>
+                )}
+                {document.info.meta.CreationDate && (
+                  <div>
+                    <span className="text-gray-500">
+                      <FormattedMessage id="analysis.creation_date" defaultMessage="Created:" />
+                    </span> {document.info.meta.CreationDate.replace('D:', '')}
+                  </div>
+                )}
+              </div>
+            </details>
+          </div>
+        )}
+        
+        {document.info?.is_tagged !== undefined && (
+          <div className="text-xs mt-1">
+            <span className="text-gray-500">
+              <FormattedMessage id="analysis.tagged_pdf" defaultMessage="Tagged PDF:" />
+            </span> {document.info.is_tagged ? 
+              <FormattedMessage id="analysis.yes" defaultMessage="Yes" /> : 
+              <FormattedMessage id="analysis.no" defaultMessage="No" />}
+          </div>
+        )}
+        
+        {/* Table of Contents collapsed section */}
+        {document.info?.toc && document.info.toc.length > 0 && (
+          <div className="mt-2 text-xs">
+            <details>
+              <summary className="cursor-pointer text-blue-600 hover:text-blue-800">
+                <FormattedMessage id="analysis.table_of_contents" defaultMessage="Table of Contents" />
+                <span className="text-gray-500 ml-1">
+                  ({document.info.toc.length})
+                </span>
+              </summary>
+              <div className="mt-1 pl-1 max-h-40 overflow-y-auto">
+                {document.info.toc.map((tocItem, index) => (
+                  <div 
+                    key={index}
+                    className="py-1 hover:bg-gray-100 cursor-pointer"
+                    style={{ paddingLeft: `${tocItem.level * 8}px` }}
+                  >
+                    <span className="text-blue-600">{tocItem.title}</span>
+                    <span className="text-gray-500 ml-1">
+                      (p.{tocItem.page + 1})
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </details>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
 
 /**
  * Selected object info panel
@@ -112,7 +230,7 @@ const LayerStatistics = ({ processedLayers, pageBundle }) => {
 /**
  * Object Inspector component for the right sidebar
  */
-const ObjectInspector = ({ processedLayers, pageBundle, selectedObject, onClose }) => {
+const ObjectInspector = ({ processedLayers, pageBundle, selectedObject, onClose, document }) => {
   return (
     <div className="w-64 bg-white shadow-md overflow-y-auto border-l border-gray-200">
       <div className="p-4">
@@ -130,8 +248,11 @@ const ObjectInspector = ({ processedLayers, pageBundle, selectedObject, onClose 
           </button>
         </div>
         
+        {/* Document Info */}
+        <DocumentInfoPanel document={document} />
+        
         {/* Selected Object Info */}
-        <SelectedObjectInfo selectedObject={selectedObject} />
+        {selectedObject && <SelectedObjectInfo selectedObject={selectedObject} />}
         
         {/* Layer Statistics */}
         <div>
