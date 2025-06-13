@@ -32,6 +32,8 @@
     "dashboard.showing_records": "Showing {start} to {end} of {total} documents",
     "dashboard.previous": "Previous",
     "dashboard.next": "Next",
+    "dashboard.first": "First",
+    "dashboard.last": "Last",
     "dashboard.no_documents_yet": "No documents yet",
     "dashboard.upload_first_pdf": "Upload your first PDF document to start analyzing its structure",
     "dashboard.upload_pdf_document": "Upload PDF Document",

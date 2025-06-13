@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { FormattedMessage, useIntl } from 'react-intl';
 
 const AnalysisContainer = () => {
   const intl = useIntl();
   const { documentId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   
   // Sample document data - would come from API
   const document = {
@@ -62,7 +63,22 @@ const AnalysisContainer = () => {
   
   // Handle back button click
   const handleBackClick = () => {
-    navigate('/');
+    // Preserve search params when navigating back (for sorting, filtering, pagination)
+    const urlParams = new URLSearchParams(location.search);
+    
+    // Keep only the sort, filter, and pagination related params
+    const sortParams = new URLSearchParams();
+    ['sortField', 'sortDir', 'search', 'status', 'page'].forEach(param => {
+      if (urlParams.has(param)) {
+        sortParams.set(param, urlParams.get(param));
+      }
+    });
+    
+    const searchParamsString = sortParams.toString();
+    navigate({
+      pathname: '/',
+      search: searchParamsString ? `?${searchParamsString}` : ''
+    });
   };
   
   return (

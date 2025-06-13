@@ -12,7 +12,24 @@ const Header = () => {
   
   // Handle back button click
   const handleBackClick = () => {
-    navigate('/');
+    // Preserve search params when navigating back (for sorting, filtering, pagination)
+    const urlParams = new URLSearchParams(location.search);
+    
+    // Keep only the necessary params
+    const paramsToCopy = ['sortField', 'sortDir', 'search', 'status', 'page'];
+    const returnParams = new URLSearchParams();
+    
+    paramsToCopy.forEach(param => {
+      if (urlParams.has(param)) {
+        returnParams.set(param, urlParams.get(param));
+      }
+    });
+    
+    const searchParamsString = returnParams.toString();
+    navigate({
+      pathname: '/',
+      search: searchParamsString ? `?${searchParamsString}` : ''
+    });
   };
   
   return (

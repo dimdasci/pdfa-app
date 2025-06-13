@@ -1,17 +1,27 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { FormattedMessage, useIntl } from 'react-intl';
 
 const DocumentRow = ({ doc, formatDate, getHumanFileSize, getStatusBadgeClass }) => {
   const intl = useIntl();
   const status = doc.status.toLowerCase();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const handleRowClick = () => {
-    const path = status === 'completed' ? 
+    // Preserve current search params for when user navigates back
+    const currentParams = new URLSearchParams(searchParams).toString();
+    
+    // Determine the destination path based on document status
+    const basePath = status === 'completed' ? 
       `/documents/${doc.document_id}/analysis` : 
       `/documents/${doc.document_id}/processing`;
-    navigate(path);
+      
+    // Navigate to the path with state to remember where we came from
+    navigate({
+      pathname: basePath,
+      search: currentParams ? `?${currentParams}` : ''
+    });
   };
 
   return (

@@ -32,6 +32,8 @@
     "dashboard.showing_records": "Mostrando {start} a {end} de {total} documentos",
     "dashboard.previous": "Anterior",
     "dashboard.next": "Siguiente",
+    "dashboard.first": "Primera",
+    "dashboard.last": "Última",
     "dashboard.no_documents_yet": "Aún no hay documentos",
     "dashboard.upload_first_pdf": "Sube tu primer documento PDF para comenzar a analizar su estructura",
     "dashboard.upload_pdf_document": "Subir Documento PDF",
