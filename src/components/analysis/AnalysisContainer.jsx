@@ -54,6 +54,24 @@ const AnalysisContainer = () => {
     return new Date(dateString).toLocaleDateString();
   };
   
+  // Get color for object type
+  const getObjectTypeColor = (type) => {
+    switch (type) {
+      case 'text':
+        return '#EAB308'; // yellow-500 (more contrast)
+      case 'image':
+        return '#22C55E'; // green-500 (more contrast)
+      case 'path':
+        return '#3B82F6'; // blue-500 (more contrast)
+      case 'form':
+        return '#EF4444'; // red-500 (more contrast)
+      case 'annotation':
+        return '#8B5CF6'; // purple-500 (more contrast)
+      default:
+        return '#6B7280'; // gray-500 (more contrast)
+    }
+  };
+  
   // Handle page change
   const handlePageChange = (e) => {
     if (!document || !document.page_count) return;
@@ -78,16 +96,17 @@ const AnalysisContainer = () => {
     // Individual layers will be managed dynamically
   });
   
-  // Use real page data if available, otherwise use sample data
-  const layers = pageBundle?.layers || [
-    { zIndex: 1, type: 'path', objectCount: 1, visible: true, highlighted: false },
-    { zIndex: 2, type: 'text', objectCount: 18, visible: true, highlighted: false },
-    { zIndex: 3, type: 'image', objectCount: 1, visible: true, highlighted: false },
-    { zIndex: 4, type: 'text', objectCount: 1, visible: true, highlighted: false },
-    { zIndex: 5, type: 'path', objectCount: 3, visible: true, highlighted: false },
-    { zIndex: 6, type: 'text', objectCount: 2, visible: true, highlighted: false },
-    // More layers would be added here
-  ];
+  // State for object outlining
+  const [outlineObjects, setOutlineObjects] = useState(false);
+  
+  // State for layer outlining - tracks which layers should have outlines
+  const [layerOutlining, setLayerOutlining] = useState({
+    allLayers: false, // Initially no layers are outlined
+    // Individual layer outlining will be managed dynamically
+  });
+  
+  // Use real page data if available, otherwise empty list
+  const layers = pageBundle?.layers || [];
   
   // Transform API layer data to component format
   const processedLayers = pageBundle ? pageBundle.layers.map(layer => ({
@@ -97,19 +116,32 @@ const AnalysisContainer = () => {
     url: layer.url,
     visible: layerVisibility[`layer_${layer.z_index}`] === undefined ? 
       layerVisibility.allLayers : layerVisibility[`layer_${layer.z_index}`],
-    highlighted: false
+    outlined: outlineObjects && (layerOutlining[`layer_${layer.z_index}`] === undefined ? 
+      layerOutlining.allLayers : layerOutlining[`layer_${layer.z_index}`])
   })) : layers;
   
-  // Initialize layer visibility state when pageBundle changes
+  // Initialize layer visibility and outlining states when pageBundle changes
   useEffect(() => {
     if (pageBundle?.layers) {
       const newVisibilityState = { ...layerVisibility };
+      const newOutliningState = { ...layerOutlining };
+      
       pageBundle.layers.forEach(layer => {
-        if (newVisibilityState[`layer_${layer.z_index}`] === undefined) {
-          newVisibilityState[`layer_${layer.z_index}`] = layerVisibility.allLayers;
+        const layerKey = `layer_${layer.z_index}`;
+        
+        // Initialize visibility state if not already set
+        if (newVisibilityState[layerKey] === undefined) {
+          newVisibilityState[layerKey] = layerVisibility.allLayers;
+        }
+        
+        // Initialize outlining state if not already set
+        if (newOutliningState[layerKey] === undefined) {
+          newOutliningState[layerKey] = layerOutlining.allLayers;
         }
       });
+      
       setLayerVisibility(newVisibilityState);
+      setLayerOutlining(newOutliningState);
     }
   }, [pageBundle?.layers]);
   
@@ -142,6 +174,20 @@ const AnalysisContainer = () => {
     }
     
     setLayerVisibility(newVisibility);
+    
+    // If hiding all layers, also turn off outlining for all layers
+    if (!newAllLayersState && outlineObjects) {
+      const newOutlining = { ...layerOutlining, allLayers: false };
+      
+      // Set all individual layer outlining states to false
+      if (pageBundle?.layers) {
+        pageBundle.layers.forEach(layer => {
+          newOutlining[`layer_${layer.z_index}`] = false;
+        });
+      }
+      
+      setLayerOutlining(newOutlining);
+    }
   };
   
   // Toggle visibility of a specific layer
@@ -150,33 +196,159 @@ const AnalysisContainer = () => {
     const currentVisibility = layerVisibility[layerKey] === undefined ? 
       layerVisibility.allLayers : layerVisibility[layerKey];
     
+    // Create new visibility state with the toggled value for this layer
     const newVisibility = { 
       ...layerVisibility, 
       [layerKey]: !currentVisibility 
     };
     
-    // Check if all layers are now visible or not
+    // Make sure all layers have explicit visibility states
     if (pageBundle?.layers) {
-      const allVisible = pageBundle.layers.every(layer => 
-        newVisibility[`layer_${layer.z_index}`] !== false
-      );
+      pageBundle.layers.forEach(layer => {
+        const otherLayerKey = `layer_${layer.z_index}`;
+        if (otherLayerKey !== layerKey && newVisibility[otherLayerKey] === undefined) {
+          newVisibility[otherLayerKey] = layerVisibility.allLayers;
+        }
+      });
+      
+      // Check if all layers are now visible
+      const allVisible = pageBundle.layers.every(layer => {
+        const layerKey = `layer_${layer.z_index}`;
+        return newVisibility[layerKey] !== false;
+      });
       newVisibility.allLayers = allVisible;
     }
     
     setLayerVisibility(newVisibility);
+    
+    // If we're hiding a layer, also turn off its outlining
+    if (currentVisibility && layerOutlining[layerKey]) {
+      const newOutlining = {
+        ...layerOutlining,
+        [layerKey]: false
+      };
+      
+      // Make sure all other layers have explicit outlining states
+      if (pageBundle?.layers) {
+        pageBundle.layers.forEach(layer => {
+          const otherLayerKey = `layer_${layer.z_index}`;
+          if (otherLayerKey !== layerKey && newOutlining[otherLayerKey] === undefined) {
+            newOutlining[otherLayerKey] = layerOutlining.allLayers;
+          }
+        });
+        
+        // Update the allLayers state for outlining - only consider visible layers
+        const allOutlined = pageBundle.layers.every(layer => {
+          const layerKey = `layer_${layer.z_index}`;
+          const layerIsVisible = newVisibility[layerKey] === undefined
+            ? newVisibility.allLayers
+            : newVisibility[layerKey];
+          
+          if (!layerIsVisible) {
+            return true; // Skip invisible layers in the "all" check
+          }
+          
+          const isOutlined = newOutlining[layerKey] === undefined 
+            ? newOutlining.allLayers 
+            : newOutlining[layerKey];
+            
+          return isOutlined;
+        });
+        
+        newOutlining.allLayers = allOutlined;
+      }
+      
+      setLayerOutlining(newOutlining);
+    }
   };
   
-  // Toggle highlight of a specific layer
-  const toggleLayerHighlight = (zIndex) => {
-    const updatedLayers = processedLayers.map(layer => {
-      if (layer.zIndex === zIndex) {
-        return { ...layer, highlighted: !layer.highlighted };
-      }
-      return layer;
-    });
+  // Toggle object outlining
+  const toggleOutlining = () => {
+    const newOutlineState = !outlineObjects;
+    setOutlineObjects(newOutlineState);
     
-    // In a real implementation, we would update state here
-    console.log('Toggled highlight for layer:', zIndex);
+    // If turning on outlines, set all visible layers to be outlined
+    if (newOutlineState) {
+      const newLayerOutlining = { ...layerOutlining, allLayers: true };
+      
+      // Set all individual layer outlining states based on their visibility
+      if (pageBundle?.layers) {
+        pageBundle.layers.forEach(layer => {
+          const layerKey = `layer_${layer.z_index}`;
+          const isVisible = layerVisibility[layerKey] === undefined 
+            ? layerVisibility.allLayers 
+            : layerVisibility[layerKey];
+          
+          // Only outline visible layers
+          newLayerOutlining[layerKey] = isVisible;
+        });
+      }
+      
+      setLayerOutlining(newLayerOutlining);
+    }
+  };
+  
+  // Toggle outlining for a specific layer
+  const toggleLayerOutlining = (zIndex) => {
+    // First check if this layer is visible - can't outline invisible layers
+    const layerKey = `layer_${zIndex}`;
+    const isVisible = layerVisibility[layerKey] === undefined 
+      ? layerVisibility.allLayers 
+      : layerVisibility[layerKey];
+    
+    // Don't allow outlining invisible layers
+    if (!isVisible) {
+      return;
+    }
+    
+    // If outlines are disabled globally, enable them first
+    if (!outlineObjects) {
+      setOutlineObjects(true);
+    }
+    
+    // Toggle outlining for this specific layer
+    const currentOutlining = layerOutlining[layerKey] === undefined 
+      ? layerOutlining.allLayers 
+      : layerOutlining[layerKey];
+    
+    // Create a new outlining state with the toggled value for this layer
+    const newOutlining = { 
+      ...layerOutlining, 
+      [layerKey]: !currentOutlining 
+    };
+    
+    // Make sure all other layers have explicit outlining states
+    // This prevents issues when toggling visibility and outlining
+    if (pageBundle?.layers) {
+      pageBundle.layers.forEach(layer => {
+        const otherLayerKey = `layer_${layer.z_index}`;
+        if (otherLayerKey !== layerKey && newOutlining[otherLayerKey] === undefined) {
+          newOutlining[otherLayerKey] = layerOutlining.allLayers;
+        }
+      });
+      
+      // Check if all visible layers are now outlined or not
+      const allOutlined = pageBundle.layers.every(layer => {
+        const layerIsVisible = layerVisibility[`layer_${layer.z_index}`] === undefined
+          ? layerVisibility.allLayers
+          : layerVisibility[`layer_${layer.z_index}`];
+        
+        if (!layerIsVisible) {
+          return true; // Skip invisible layers in the "all" check
+        }
+        
+        const layerKey = `layer_${layer.z_index}`;
+        const isOutlined = newOutlining[layerKey] === undefined 
+          ? newOutlining.allLayers 
+          : newOutlining[layerKey];
+          
+        return isOutlined;
+      });
+      
+      newOutlining.allLayers = allOutlined;
+    }
+    
+    setLayerOutlining(newOutlining);
   };
   
   // Handle back button click
@@ -468,11 +640,15 @@ const AnalysisContainer = () => {
                       )}
                     </svg>
                   </button>
-                  <div className="h-6 w-6 bg-blue-100 rounded flex items-center justify-center">
-                    <svg className="h-4 w-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <button 
+                    className={`h-6 w-6 ${outlineObjects ? 'bg-blue-100' : 'bg-gray-100'} rounded flex items-center justify-center`}
+                    onClick={toggleOutlining}
+                    title={outlineObjects ? 'Hide object outlines' : 'Show object outlines'}
+                  >
+                    <svg className={`h-4 w-4 ${outlineObjects ? 'text-blue-500' : 'text-gray-500'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <rect x="4" y="4" width="16" height="16" rx="2" strokeWidth="1.5" strokeDasharray="2 2" />
                     </svg>
-                  </div>
+                  </button>
                 </div>
               </div>
               
@@ -524,18 +700,81 @@ const AnalysisContainer = () => {
                         )}
                       </svg>
                     </button>
-                    <button 
-                      className={`h-6 w-6 ${layer.highlighted ? 'bg-blue-100' : 'bg-gray-100'} rounded flex items-center justify-center`}
-                      onClick={() => toggleLayerHighlight(layer.zIndex)}
-                      title={layer.highlighted ? 'Remove highlight' : 'Highlight layer'}
+                    <button
+                      className={`h-6 w-6 ${(outlineObjects && layer.outlined) ? 'bg-blue-100' : 'bg-gray-100'} rounded flex items-center justify-center`}
+                      onClick={() => toggleLayerOutlining(layer.zIndex)}
+                      title={(outlineObjects && layer.outlined) ? 'Hide object outlines' : 'Show object outlines'}
+                      disabled={!layer.visible}
                     >
-                      <svg className={`h-4 w-4 ${layer.highlighted ? 'text-blue-500' : 'text-gray-500'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <rect x="4" y="4" width="16" height="16" rx="2" strokeWidth="1.5" strokeDasharray="2 2" />
+                      <svg className={`h-4 w-4 ${(outlineObjects && layer.outlined) ? 'text-blue-500' : layer.visible ? 'text-gray-500' : 'text-gray-300'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <rect x="4" y="4" width="16" height="16" rx="2" strokeWidth="2" strokeDasharray="3 2" />
                       </svg>
                     </button>
                   </div>
                 </div>
               ))}
+              
+              {/* Object outlining info */}
+              {outlineObjects && (
+                <div className="mt-3 p-2 bg-blue-50 text-blue-700 text-xs rounded">
+                  <div className="mb-1 font-medium">
+                    <FormattedMessage 
+                      id="analysis.outline_info" 
+                      defaultMessage="Object outlines are enabled." 
+                    />
+                  </div>
+                  
+                  {/* Show which layers are being outlined */}
+                  {processedLayers.some(layer => layer.visible && layer.outlined) ? (
+                    <div className="text-xs mb-2">
+                      <FormattedMessage 
+                        id="analysis.outlined_layers" 
+                        defaultMessage="Outlined layers: " 
+                      />
+                      {processedLayers
+                        .filter(layer => layer.visible && layer.outlined)
+                        .map(layer => layer.zIndex)
+                        .join(', ')}
+                    </div>
+                  ) : (
+                    <div className="text-xs mb-2 text-amber-700">
+                      <FormattedMessage 
+                        id="analysis.no_outlined_layers" 
+                        defaultMessage="No layers are currently outlined. Click the outline button for a layer to see its objects." 
+                      />
+                    </div>
+                  )}
+                  
+                  <div className="text-xs mb-2">
+                    <FormattedMessage 
+                      id="analysis.outline_legend" 
+                      defaultMessage="Color legend:" 
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 mt-2">
+                    <div className="flex items-center">
+                      <div className="w-4 h-4 mr-2 border border-gray-300" style={{backgroundColor: getObjectTypeColor('text')}}></div>
+                      <span className="font-medium">Text</span>
+                    </div>
+                    <div className="flex items-center">
+                      <div className="w-4 h-4 mr-2 border border-gray-300" style={{backgroundColor: getObjectTypeColor('image')}}></div>
+                      <span className="font-medium">Image</span>
+                    </div>
+                    <div className="flex items-center">
+                      <div className="w-4 h-4 mr-2 border border-gray-300" style={{backgroundColor: getObjectTypeColor('path')}}></div>
+                      <span className="font-medium">Path</span>
+                    </div>
+                    <div className="flex items-center">
+                      <div className="w-4 h-4 mr-2 border border-gray-300" style={{backgroundColor: getObjectTypeColor('form')}}></div>
+                      <span className="font-medium">Form</span>
+                    </div>
+                    <div className="flex items-center">
+                      <div className="w-4 h-4 mr-2 border border-gray-300" style={{backgroundColor: getObjectTypeColor('annotation')}}></div>
+                      <span className="font-medium">Annotation</span>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
           
@@ -745,8 +984,6 @@ const AnalysisContainer = () => {
                               width: '100%', 
                               height: '100%',
                               objectFit: 'contain',
-                              opacity: layer.highlighted ? 0.8 : 1,
-                              border: layer.highlighted ? '2px solid rgba(59, 130, 246, 0.5)' : 'none',
                               zIndex: layer.zIndex
                             }}
                           />
@@ -765,6 +1002,78 @@ const AnalysisContainer = () => {
                         </div>
                       )}
                     </div>
+                  )}
+                  
+                  {/* Object Outlines Overlay */}
+                  {outlineObjects && pageBundle?.layers && (
+                    <svg 
+                      className="absolute inset-0 z-50" 
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        pointerEvents: 'none' // Allows clicking through to underlying elements
+                      }}
+                      viewBox={`0 0 ${pageBundle.size?.width || 612} ${pageBundle.size?.height || 792}`}
+                      preserveAspectRatio="xMinYMin meet"
+                    >
+                      {pageBundle.layers.flatMap(layer => {
+                        // Only show outlines for visible layers that have outlining enabled
+                        const layerKey = `layer_${layer.z_index}`;
+                        const isLayerVisible = layerVisibility[layerKey] === undefined
+                          ? layerVisibility.allLayers
+                          : layerVisibility[layerKey];
+                        
+                        // Check if this layer should be outlined
+                        const isLayerOutlined = layerOutlining[layerKey] === undefined
+                          ? layerOutlining.allLayers
+                          : layerOutlining[layerKey];
+                        
+                        // Skip this layer if it's not visible, not outlined, or has no objects
+                        if (!isLayerVisible || !isLayerOutlined || !layer.objects || layer.objects.length === 0) {
+                          return [];
+                        }
+                        
+                        // Sort objects by ID to maintain consistent drawing order
+                        const sortedObjects = [...layer.objects].sort((a, b) => {
+                          // Convert IDs to numbers if possible, otherwise use string comparison
+                          const idA = parseInt(a.id) || a.id;
+                          const idB = parseInt(b.id) || b.id;
+                          return idA - idB;
+                        });
+                        
+                        return sortedObjects.map(obj => {
+                          if (!obj.bbox || obj.bbox.length !== 4) return null;
+                          
+                          const [x1, y1, x2, y2] = obj.bbox;
+                          const width = x2 - x1;
+                          const height = y2 - y1;
+                          
+                          // Skip zero-area objects
+                          if (width <= 0 || height <= 0) return null;
+                          
+                          // Flip Y coordinates to account for PDF coordinate system
+                          // In PDF, origin (0,0) is at bottom-left, Y increases upward
+                          // In SVG, origin (0,0) is at top-left, Y increases downward
+                          const pageHeight = pageBundle.size?.height || 792;
+                          const flippedY1 = pageHeight - y2; // y2 becomes top position after flipping
+                          
+                          return (
+                            <rect
+                              key={`outline-${layer.z_index}-${obj.id}`}
+                              x={x1}
+                              y={flippedY1}
+                              width={width}
+                              height={height}
+                              fill="none"
+                              stroke={getObjectTypeColor(obj.type || layer.type)}
+                              strokeWidth="2.5"
+                              strokeDasharray="4 3"
+                              style={{ opacity: 1.0 }}
+                            />
+                          );
+                        });
+                      })}
+                    </svg>
                   )}
                   
                   {/* Info overlay */}
