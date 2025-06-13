@@ -1,6 +1,9 @@
 import React from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { FormattedMessage, useIntl } from 'react-intl';
+import { useDocument } from '../../hooks/useApi';
+import Loading from '../common/Loading';
+import ErrorMessage from '../common/ErrorMessage';
 
 const ProcessingContainer = () => {
   const intl = useIntl();
@@ -8,22 +11,35 @@ const ProcessingContainer = () => {
   const navigate = useNavigate();
   const location = useLocation();
   
-  // Sample data - would come from API
-  const document = {
-    id: documentId,
-    name: 'Contract_Agreement.pdf',
-    dateUploaded: '2025-04-17',
-    pages: 5,
-    size: '1.8 MB',
-    status: 'processing',
-    // For demonstration, can be switched to 'failed' to show error state
-    // status: 'failed',
-    estimatedTimeRemaining: '2:35',
-    errorMessage: 'Unable to parse content stream at page 3. Invalid syntax at offset 1024.'
+  // Fetch document details from API
+  const { document, loading, error, refetch } = useDocument(documentId);
+  
+  // Convert bytes to human-readable file size
+  const getHumanFileSize = (bytes) => {
+    if (bytes === undefined || bytes === null) {
+      return 'N/A';
+    }
+    
+    const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+    let size = bytes;
+    let unitIndex = 0;
+    
+    while (size >= 1024 && unitIndex < units.length - 1) {
+      size /= 1024;
+      unitIndex++;
+    }
+    
+    return `${size.toFixed(1)} ${units[unitIndex]}`;
   };
   
-  const isProcessing = document.status === 'processing';
-  const hasFailed = document.status === 'failed';
+  // Format date to local date string
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString();
+  };
+  
+  const isProcessing = document?.status === 'processing';
+  const hasFailed = document?.status === 'failed';
   
   // Handle back button click
   const handleBackClick = () => {
@@ -47,80 +63,94 @@ const ProcessingContainer = () => {
   
   return (
     <div className="flex flex-col p-6 overflow-auto h-full">
-      {/* Document Info Card */}
-      <div className="bg-white rounded-lg shadow p-6 mb-6">
-        <div className="flex items-center">
-          <div className="h-12 w-12 bg-red-100 rounded flex items-center justify-center mr-4">
-            <svg className="h-8 w-8 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-          </div>
-          <div>
-            <h2 className="text-xl font-semibold">{document.name}</h2>
-            <div className="text-sm text-gray-500">
-              <FormattedMessage 
-                id="processing.document_info" 
-                defaultMessage="Uploaded on {date} • {pages} pages • {size}"
-                values={{
-                  date: new Date(document.dateUploaded).toLocaleDateString(),
-                  pages: document.pages,
-                  size: document.size
-                }}
-              />
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* Loading state */}
+      {loading && (
+        <Loading message={intl.formatMessage({
+          id: "processing.loading",
+          defaultMessage: "Loading document information..."
+        })} />
+      )}
       
-      {/* Processing Status Card */}
-      {isProcessing && (
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <div className="mb-4">
-            <div className="flex justify-between items-center mb-3">
-              <h3 className="font-medium">
-                <FormattedMessage 
-                  id="processing.processing_document" 
-                  defaultMessage="Processing Document" 
-                />
-              </h3>
-              <span className="text-sm text-gray-500">
-                <FormattedMessage 
-                  id="processing.time_remaining" 
-                  defaultMessage="Estimated time remaining: {time}"
-                  values={{ time: document.estimatedTimeRemaining }}
-                />
-              </span>
-            </div>
-            
-            {/* Infinite Loading Indicator */}
-            <div className="relative pt-1 mb-4">
-              <div className="overflow-hidden h-2 text-xs flex rounded bg-gray-200">
-                <div className="animate-pulse w-full h-full bg-blue-600 rounded"></div>
+      {/* Error state */}
+      {error && !loading && (
+        <ErrorMessage 
+          message={error}
+          onRetry={refetch}
+        />
+      )}
+      
+      {document && !loading && !error && (
+        <>
+          {/* Document Info Card */}
+          <div className="bg-white rounded-lg shadow p-6 mb-6">
+            <div>
+              <h2 className="text-xl font-semibold">{document.name}</h2>
+              <div className="text-sm text-gray-600 mb-1">
+                #{document.document_id}
               </div>
-            </div>
-            
-            <p className="text-sm text-gray-600 mb-4">
-              <FormattedMessage 
-                id="processing.analyzing_message" 
-                defaultMessage="We're analyzing your PDF document structure. This might take a few minutes depending on the complexity of your document."
-              />
-            </p>
-            
-            {/* Control button */}
-            <div className="flex justify-start">
-              <button className="px-4 py-2 border border-gray-300 rounded text-gray-600 hover:bg-gray-50">
+              <div className="text-sm text-gray-500">
                 <FormattedMessage 
-                  id="processing.cancel" 
-                  defaultMessage="Cancel Processing"
+                  id="processing.document_info" 
+                  defaultMessage="Uploaded on {date} • {size}"
+                  values={{
+                    date: formatDate(document.uploaded),
+                    size: getHumanFileSize(document.size_in_bytes)
+                  }}
                 />
-              </button>
+              </div>
+              <div className="text-sm text-gray-500 mt-1">
+                {document.source === 'file' ? (
+                  <FormattedMessage
+                    id="processing.document_source"
+                    defaultMessage="Source: {source}"
+                    values={{
+                      source: intl.formatMessage({id: "processing.source_file", defaultMessage: "File upload"})
+                    }}
+                  />
+                ) : document.source_url ? (
+                  <>
+                    <FormattedMessage
+                      id="processing.document_source_url"
+                      defaultMessage="Source: "
+                    />
+                    <a 
+                      href={document.source_url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:underline"
+                    >
+                      {document.source_url}
+                    </a>
+                  </>
+                ) : (
+                  <FormattedMessage
+                    id="processing.document_source"
+                    defaultMessage="Source: {source}"
+                    values={{
+                      source: intl.formatMessage({id: "processing.source_unknown", defaultMessage: "Unknown"})
+                    }}
+                  />
+                )}
+              </div>
+              
+              {isProcessing && (
+                <div className="mt-4 flex items-center">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500 mr-2"></div>
+                  <span className="text-sm text-blue-600 font-medium">
+                    <FormattedMessage 
+                      id="processing.status_processing" 
+                      defaultMessage="Processing document..."
+                    />
+                  </span>
+                </div>
+              )}
             </div>
           </div>
-        </div>
+        </>
       )}
       
       {/* Error State */}
-      {hasFailed && (
+      {document && hasFailed && (
         <div className="bg-white rounded-lg shadow p-6 mb-6">
           <div className="flex items-center mb-4 text-red-600">
             <div className="h-8 w-8 bg-red-100 rounded-full flex items-center justify-center mr-3">
@@ -162,9 +192,11 @@ const ProcessingContainer = () => {
                 />
               </li>
             </ul>
-            <div className="bg-gray-100 rounded p-4 font-mono text-xs text-gray-700 mb-4">
-              {document.errorMessage}
-            </div>
+            {document.info && (
+              <div className="bg-gray-100 rounded p-4 font-mono text-xs text-gray-700 mb-4">
+                {document.info}
+              </div>
+            )}
           </div>
           
           {/* Control buttons */}
@@ -175,7 +207,10 @@ const ProcessingContainer = () => {
                 defaultMessage="Back to Documents"
               />
             </button>
-            <button className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded flex items-center">
+            <button 
+              onClick={refetch}
+              className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded flex items-center"
+            >
               <svg className="h-4 w-4 text-white mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
