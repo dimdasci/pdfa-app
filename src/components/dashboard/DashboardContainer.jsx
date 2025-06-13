@@ -27,17 +27,22 @@ const DashboardContainer = () => {
     return matchesSearch && matchesStatus;
   }) : [];
   
-  // Calculate file size in human-readable format
-  const getHumanFileSize = (pageCount, status) => {
-    // Only completed documents have page count
-    if (status.toLowerCase() !== 'complete' || pageCount === undefined) {
+  // Convert bytes to human-readable file size
+  const getHumanFileSize = (bytes) => {
+    if (bytes === undefined || bytes === null) {
       return 'N/A';
     }
     
-    // This is a placeholder since API doesn't return file size
-    // We're estimating based on page count (rough approximation)
-    const estimatedSize = pageCount * 0.2; // Assume 200KB per page on average
-    return estimatedSize > 1 ? `${estimatedSize.toFixed(1)} MB` : `${(estimatedSize * 1000).toFixed(0)} KB`;
+    const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+    let size = bytes;
+    let unitIndex = 0;
+    
+    while (size >= 1024 && unitIndex < units.length - 1) {
+      size /= 1024;
+      unitIndex++;
+    }
+    
+    return `${size.toFixed(1)} ${units[unitIndex]}`;
   };
 
   // Format date to local date string
@@ -48,7 +53,7 @@ const DashboardContainer = () => {
   // Get appropriate status badge class
   const getStatusBadgeClass = (status) => {
     switch (status.toLowerCase()) {
-      case 'complete':
+      case 'completed':
         return 'bg-green-100 text-green-800';
       case 'processing':
         return 'bg-yellow-100 text-yellow-800';

@@ -46,8 +46,8 @@ const DashboardHeader = ({ searchTerm, statusFilter, onSearchChange, onFilterCha
           <option value="all">
             {intl.formatMessage({ id: 'dashboard.all_statuses', defaultMessage: 'All statuses' })}
           </option>
-          <option value="complete">
-            {intl.formatMessage({ id: 'dashboard.complete', defaultMessage: 'Complete' })}
+          <option value="completed">
+            {intl.formatMessage({ id: 'dashboard.completed', defaultMessage: 'Completed' })}
           </option>
           <option value="processing">
             {intl.formatMessage({ id: 'dashboard.processing', defaultMessage: 'Processing' })}

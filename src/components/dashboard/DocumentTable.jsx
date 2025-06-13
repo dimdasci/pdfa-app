@@ -12,16 +12,16 @@ const DocumentTable = ({ loading, error, filteredDocuments, formatDate, getHuman
               <FormattedMessage id="dashboard.document_name" defaultMessage="Document Name" />
             </th>
             <th className="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              <FormattedMessage id="dashboard.date_uploaded" defaultMessage="Date Uploaded" />
+              <FormattedMessage id="dashboard.date_uploaded" defaultMessage="Uploaded" />
+            </th>
+            <th className="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <FormattedMessage id="dashboard.size" defaultMessage="Size" />
             </th>
             <th className="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               <FormattedMessage id="dashboard.pages" defaultMessage="Pages" />
             </th>
             <th className="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               <FormattedMessage id="dashboard.status" defaultMessage="Status" />
-            </th>
-            <th className="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              <FormattedMessage id="dashboard.actions" defaultMessage="Actions" />
             </th>
           </tr>
         </thead>
