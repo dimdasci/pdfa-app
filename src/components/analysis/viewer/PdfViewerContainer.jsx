@@ -64,7 +64,6 @@ const PdfViewer = ({
       {layerVisibility.allLayers && pageBundle.full_raster_url && (
         <img 
           src={pageBundle.full_raster_url} 
-          crossOrigin="anonymous"
           alt={`Full page ${currentPage}`}
           style={{
             position: 'absolute', 
@@ -88,7 +87,6 @@ const PdfViewer = ({
               <img 
                 key={`layer-${layer.zIndex}`}
                 src={layer.url} 
-                crossOrigin="anonymous"
                 alt={`Layer ${layer.zIndex} (${layer.type})`}
                 style={{
                   position: 'absolute', 
