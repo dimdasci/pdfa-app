@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { FormattedMessage } from 'react-intl';
 import Loading from '../../common/Loading';
 import { getObjectTypeColor } from '../../../lib/analysisUtils';
@@ -14,8 +14,11 @@ const PdfViewer = ({
   layerVisibility, 
   outlineObjects, 
   layerOutlining,
-  processedLayers
+  processedLayers,
+  showZeroAreaMarkers,
+  zeroAreaObjects
 }) => {
+  
   if (pageLoading) {
     return (
       <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-70 z-50">
@@ -156,7 +159,7 @@ const PdfViewer = ({
               const width = x2 - x1;
               const height = y2 - y1;
               
-              // Skip zero-area objects
+              // Skip zero-area objects (they'll be handled separately)
               if (width <= 0 || height <= 0) return null;
               
               // Flip Y coordinates to account for PDF coordinate system
@@ -183,19 +186,89 @@ const PdfViewer = ({
           })}
         </svg>
       )}
-      
-      {/* Info overlay */}
-      <div className="absolute bottom-2 right-2 bg-white bg-opacity-80 p-2 rounded shadow-sm text-xs z-50">
-        <FormattedMessage 
-          id="analysis.page_loaded" 
-          defaultMessage="Page {pageNumber} loaded ({width}×{height})" 
-          values={{
-            pageNumber: currentPage,
-            width: pageBundle.size.width,
-            height: pageBundle.size.height
+
+      {/* Zero-area objects overlay - completely independent of the outlines overlay */}
+      {pageBundle && showZeroAreaMarkers && (
+        <svg 
+          className="absolute inset-0 z-60" 
+          style={{
+            width: '100%',
+            height: '100%',
+            pointerEvents: 'auto' // Enable pointer events for tooltips
           }}
-        />
-      </div>
+          viewBox={`0 0 ${pageBundle.size?.width || 612} ${pageBundle.size?.height || 792}`}
+          preserveAspectRatio="xMinYMin meet"
+        >
+          
+          {/* Render markers */}
+          {zeroAreaObjects.map((obj, index) => {
+            if (!obj.bbox || obj.bbox.length !== 4) return null;
+            
+            const [x1, y1, x2, y2] = obj.bbox;
+            
+            // For zero-area objects, we may need to handle various cases:
+            // 1. Point (x1=x2, y1=y2)
+            // 2. Horizontal line (y1=y2, x1≠x2)
+            // 3. Vertical line (x1=x2, y1≠y2)
+            // 4. Zero-area rect (misconfigured coords)
+            
+            // Flip Y coordinates (PDF has origin at bottom-left, SVG at top-left)
+            const pageHeight = pageBundle.size?.height || 792;
+            const pageWidth = pageBundle.size?.width || 612;
+            
+            // For consistency, always use x1,y1 for point positioning
+            const flippedY = pageHeight - y1;
+                
+            // Calculate if position is outside page boundaries
+            const isOutsidePage = 
+              x1 < 0 || x1 > pageWidth || 
+              flippedY < 0 || flippedY > pageHeight;
+            
+            // Use clipped coordinates for display but indicate out-of-bounds status
+            const displayX = Math.max(24, Math.min(pageWidth - 24, x1));
+            const displayY = Math.max(24, Math.min(pageHeight - 24, flippedY));
+            
+            // Create type indicator for the marker
+            const objType = obj.type || 'unknown';
+            const typeIndicator = objType.charAt(0).toUpperCase();
+            
+            // Create an identifier for the tooltip
+            const tooltipId = `tooltip-${index}-${obj.id}`;
+            
+            return (
+              <g 
+                key={`zero-marker-${index}-${obj.id}`}
+                className="zero-area-marker"
+              >
+                {/* Simple background for the marker */}
+                <rect
+                  x={displayX - 10}
+                  y={displayY - 10}
+                  width={20}
+                  height={20}
+                  fill={isOutsidePage ? "#9C4221" : "#4B5563"} // brown for outside page, dark gray for inside
+                  stroke={isOutsidePage ? "#7B341E" : "#1F2937"} // darker border
+                  strokeWidth="1"
+                  rx="3" // rounded corners
+                />
+                
+                {/* Type letter centered properly */}
+                <text
+                  x={displayX}
+                  y={displayY}
+                  fill="white"
+                  fontSize="12"
+                  fontWeight="normal"
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                >
+                  {typeIndicator}
+                </text>
+              </g>
+            );
+          })}
+        </svg>
+      )}
     </>
   );
 };
@@ -213,12 +286,34 @@ const PdfViewerContainer = ({
   layerOutlining,
   processedLayers
 }) => {
+  // Move state to container level so it persists between renders
+  const [showZeroAreaMarkers, setShowZeroAreaMarkers] = useState(false);
+  const [zeroAreaObjects, setZeroAreaObjects] = useState([]);
+  
+  // Listen for the custom event from AnomalyPanel at the container level
+  useEffect(() => {
+    const handleToggleZeroAreaMarkers = (event) => {
+      setShowZeroAreaMarkers(event.detail.visible);
+      if (event.detail.objects) {
+        setZeroAreaObjects(event.detail.objects);
+      }
+    };
+    
+    window.addEventListener('toggle-zero-area-markers', handleToggleZeroAreaMarkers);
+    
+    return () => {
+      window.removeEventListener('toggle-zero-area-markers', handleToggleZeroAreaMarkers);
+    };
+  }, []);
+  
+  // No additional monitoring needed for zero-area objects
+
   return (
     <div className="flex-1 overflow-auto bg-gray-200 flex items-center justify-center p-6">
       <div 
         className="bg-white shadow-lg" 
         style={{
-          width: pageBundle?.size?.width ? `${pageBundle.size.width}px` : '612px', 
+          width: pageBundle?.size?.width ? `${pageBundle.size.width}px` : '612px',
           height: pageBundle?.size?.height ? `${pageBundle.size.height}px` : '792px', 
           position: 'relative'
         }}
@@ -232,6 +327,8 @@ const PdfViewerContainer = ({
           outlineObjects={outlineObjects}
           layerOutlining={layerOutlining}
           processedLayers={processedLayers}
+          showZeroAreaMarkers={showZeroAreaMarkers}
+          zeroAreaObjects={zeroAreaObjects}
         />
       </div>
     </div>
